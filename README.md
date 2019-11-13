@@ -1,16 +1,8 @@
-# rpg_stats
+# rpgStats
+An app Written in Flutter to create various stats for a tabletop rpg character.
 
-rpgStats project
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app will have the following fuctionalities:
+1. It will have the ability to create global Attributes (i.e. luck, strength, willpower) and skills (i.e. Lockpicking, Stealth, Deception) that are shared throughout the characters
+2. It will have the ability to make characters with numerical Values for Attributes and Stats to give a bonus. In addition, you can apply health points and other limited rescources for characters. 
+3. It will have the ability to "run" characters, allowing you to deplete and regain rescources and make rolls with your skills.
+4. It will have the ability to make dice rolls with user defined amounts and types of dice.
