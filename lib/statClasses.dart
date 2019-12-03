@@ -104,13 +104,13 @@ class Pool extends Stat {
 
 class Character {
   String name;
-  Map<String, Attribute> attrs;
-  Map<String, Skill> skills;
-  Map<String, Pool> pools;
+  Map<String, Attribute> attrs = {};
+  Map<String, Skill> skills = {};
+  Map<String, Pool> pools = {};
   
   Character (String name, Map<String, Stat> importStats) {
     this.name = name;
-    importStats.forEach((key, value) {
+    importStats.forEach((key, value)  {
       if (value is Attribute) {
         attrs[key] = value;
       }
@@ -127,27 +127,56 @@ class Character {
   }
 
   String toJson() {
+    var firstRun = true;
     var toReturn = ''''{
   "name" : "$name",
   "attributes" : {
     ''';
     attrs.forEach((key, value) {
-      toReturn += '"' + key + '" : ' + value.toJson() + "," ;
+      if (firstRun) {
+        firstRun = false;
+      }
+      else {
+        toReturn += ",";
+      }
+      toReturn += '"' + key + '" : ' + value.toJson() + "\n  " ;
     });
     toReturn += '''}, 
   "skills" : {
     ''';
+    firstRun = true;
     skills.forEach((key, value) {
-      toReturn += '"' + key + '" : ' + value.toJson() + "," ;
+      if (firstRun) {
+        firstRun = false;
+      }
+      else {
+        toReturn += ",";
+      }
+      toReturn += '"' + key + '" : ' + value.toJson() + "\n  ";
     });
     toReturn += '''}, 
   "pools" : {
     ''';
+    firstRun = true;
     pools.forEach((key, value) {
-      toReturn += '"' + key + '" : ' + value.toJson() + "," ;
+      if (firstRun) {
+        firstRun = false;
+      }
+      else {
+        toReturn += ",";
+      }
+      toReturn += '"' + key + '" : ' + value.toJson() + '\n  ';
     });
-    toReturn += '''}''';
+    toReturn += '''}
+}''';
     return toReturn;
   }
 
+}
+
+void main () {
+  Attribute strength = new Attribute("strength", 18, true);
+  Skill running = new Skill("running", "strength", 2);
+  Character myChar = new Character("jeff", {strength.name:strength, running.name:running});
+  print(myChar.toJson());
 }
