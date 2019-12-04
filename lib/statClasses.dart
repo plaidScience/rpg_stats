@@ -1,3 +1,5 @@
+import "dart:math";
+
 class Stat {
   var _name;
   get name => _name;
@@ -7,12 +9,13 @@ class Stat {
   Stat(String name) {
     this._name = name;
   }
-  String toJson() {
-    return '''{
-  "name" : "$_name",
-  "type" : "Stat"
-}''';
+  Stat.fromJson(Map<String, dynamic> json) {
+    this.name = json["name"];
   }
+  Map<String, dynamic> toJson() => {
+    "name" : name,
+    "type" : "Stat"
+  };
 }
 
 class Attribute extends Stat {
@@ -33,14 +36,16 @@ class Attribute extends Stat {
     this.base = attribute.base;
     this.halfRounded = attribute.halfRounded;
   }
-  String toJson() {
-    return '''{
-  "name" : "$_name",
-  "type" : "Attribute",
-  "base" : $base,
-  "halfRounded" : $halfRounded
-}''';
+  Attribute.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
+    this.base = json["base"];
+    this.halfRounded = json["halfRounded"];
   }
+  Map<String, dynamic> toJson() => {
+    "name" : name,
+    "type" : "Attribute",
+    "base" : base,
+    "halfRounded" : halfRounded
+  };
 }
 
 class Skill extends Stat {
@@ -54,14 +59,17 @@ class Skill extends Stat {
     this.relatedAttribute = copy.relatedAttribute;
     this.mod = mod;
   }
-  String toJson() {
-    return '''{
-  "name" : "$_name",
-  "type" : "Skill",
-  "relatedAttribute" : $relatedAttribute,
-  "mod" : $mod
-}''';
+
+  Skill.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
+    this.relatedAttribute = json["relatedAttribute"];
+    this.mod = json["mod"];
   }
+  Map<String, dynamic> toJson() => {
+    "name" : name,
+    "type" : "Skill",
+    "relatedAttribute" : relatedAttribute,
+    "mod" : mod
+  };
 }
 class Pool extends Stat {
   int max;
@@ -74,6 +82,10 @@ class Pool extends Stat {
   Pool.fromPool(Pool copy) : super(copy.name){
     this.max = copy.max;
     _pointer = copy.pointer;
+  }
+  Pool.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
+    this.max = json["max"];
+    this._pointer = json["pointer"];
   }
   decreasePointer([int amount]) {
     for (amount ??= 1; amount>0; amount--) {
@@ -92,14 +104,12 @@ class Pool extends Stat {
   resetPointer() {
     _pointer = max;
   }
-  String toJson() {
-    return '''{
-  "name" : "$_name",
-  "type" : "Pool",
-  "max" : $max,
-  "pointer" : $pointer
-}''';
-  }
+  Map<String, dynamic> toJson() => {
+    "name" : name,
+    "type" : "Pool",
+    "max" : max,
+    "pointer" : pointer
+  };
 }
 
 class Character {
@@ -107,6 +117,7 @@ class Character {
   Map<String, Attribute> attrs = {};
   Map<String, Skill> skills = {};
   Map<String, Pool> pools = {};
+  var randoms;
   
   Character (String name, Map<String, Stat> importStats) {
     this.name = name;
@@ -124,59 +135,26 @@ class Character {
     if (!pools.containsKey("HP")){
       pools["HP"] = new Pool("HP", 10);
     }
+    randoms = new Random(new DateTime.now().millisecondsSinceEpoch);
   }
 
-  String toJson() {
-    var firstRun = true;
-    var toReturn = ''''{
-  "name" : "$name",
-  "attributes" : {
-    ''';
-    attrs.forEach((key, value) {
-      if (firstRun) {
-        firstRun = false;
-      }
-      else {
-        toReturn += ",";
-      }
-      toReturn += '"' + key + '" : ' + value.toJson() + "\n  " ;
-    });
-    toReturn += '''}, 
-  "skills" : {
-    ''';
-    firstRun = true;
-    skills.forEach((key, value) {
-      if (firstRun) {
-        firstRun = false;
-      }
-      else {
-        toReturn += ",";
-      }
-      toReturn += '"' + key + '" : ' + value.toJson() + "\n  ";
-    });
-    toReturn += '''}, 
-  "pools" : {
-    ''';
-    firstRun = true;
-    pools.forEach((key, value) {
-      if (firstRun) {
-        firstRun = false;
-      }
-      else {
-        toReturn += ",";
-      }
-      toReturn += '"' + key + '" : ' + value.toJson() + '\n  ';
-    });
-    toReturn += '''}
-}''';
-    return toReturn;
+  Character.fromJson(Map<String, dynamic> json) {
+    this.name = json["name"];
+    this.attrs = json["attributes"];
+    this.skills = json["skills"];
+    this.pools = json["pools"];
   }
 
-}
+  int makeSkillRoll(int dNum, String skillKey) => skills[skillKey].mod + makeAttrRoll(dNum, skills[skillKey].relatedAttribute);
 
-void main () {
-  Attribute strength = new Attribute("strength", 18, true);
-  Skill running = new Skill("running", "strength", 2);
-  Character myChar = new Character("jeff", {strength.name:strength, running.name:running});
-  print(myChar.toJson());
+  int makeAttrRoll(int dNum, String attrKey) => attrs[attrKey].mod + makeRoll(dNum);
+
+  int makeRoll(int dNum) => randoms.nextInt(dNum) + 1;
+
+  Map<String, dynamic> toJson() => {
+    "name" : name,
+    "attributes" : attrs,
+    "skills" : skills,
+    "pools" : pools
+  };
 }
