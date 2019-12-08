@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'statClasses.dart';
 
 void main() => runApp(MyApp());
 
@@ -30,13 +31,29 @@ class MyApp extends StatelessWidget {
 
 }*/
 
-class Editor extends StatelessWidget {
+class Editor extends StatefulWidget {
   final String title;
-  Editor({Key key, this.title}) : super(key: key);
+  Editor({Key key}) : super(key: key);
   @override
-  Widget build(BuildContext context) {
+  _EditorState createState() => _EditorState();
+  }
+}
+class _EditorState extends State<Editor> {
+  final myController = TextEditingController();
+  @override
+  void dispose() {
+    myController.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build (BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        title: Text("Editor"),
+      ),
+      body: Container(
+
+      ),
     );
   }
 }
@@ -89,4 +106,9 @@ class MyScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+class Instances {
+  Map<String, Stat> statMap = {};
+  Map<String, Character> charMap = {};
 }

@@ -1,20 +1,16 @@
 import "dart:math";
+import "dart:convert";
 
 class Stat {
-  var _name;
-  get name => _name;
-  set name (var potentName) {
-    name = potentName.toString();
-  }
+  var name;
   Stat(String name) {
-    this._name = name;
+    this.name = name;
   }
   Stat.fromJson(Map<String, dynamic> json) {
     this.name = json["name"];
   }
   Map<String, dynamic> toJson() => {
     "name" : name,
-    "type" : "Stat"
   };
 }
 
@@ -42,7 +38,6 @@ class Attribute extends Stat {
   }
   Map<String, dynamic> toJson() => {
     "name" : name,
-    "type" : "Attribute",
     "base" : base,
     "halfRounded" : halfRounded
   };
@@ -66,7 +61,6 @@ class Skill extends Stat {
   }
   Map<String, dynamic> toJson() => {
     "name" : name,
-    "type" : "Skill",
     "relatedAttribute" : relatedAttribute,
     "mod" : mod
   };
@@ -106,7 +100,6 @@ class Pool extends Stat {
   }
   Map<String, dynamic> toJson() => {
     "name" : name,
-    "type" : "Pool",
     "max" : max,
     "pointer" : pointer
   };
@@ -139,10 +132,22 @@ class Character {
   }
 
   Character.fromJson(Map<String, dynamic> json) {
+    var attrs = {};
+    var skills = {};
+    var pools = {};
+    json["attributes"].forEach((key, value) {
+      attrs[key] = Pool.fromJson(value);
+    });
+    json["skills"].forEach((key, value) {
+      skills[key] = Pool.fromJson(value);
+    });
+    json["pools"].forEach((key, value) {
+      pools[key] = Pool.fromJson(value);
+    });
     this.name = json["name"];
-    this.attrs = json["attributes"];
-    this.skills = json["skills"];
-    this.pools = json["pools"];
+    this.attrs = attrs;
+    this.skills = skills;
+    this.pools = pools;
   }
 
   int makeSkillRoll(int dNum, String skillKey) => skills[skillKey].mod + makeAttrRoll(dNum, skills[skillKey].relatedAttribute);
@@ -151,10 +156,35 @@ class Character {
 
   int makeRoll(int dNum) => randoms.nextInt(dNum) + 1;
 
-  Map<String, dynamic> toJson() => {
-    "name" : name,
-    "attributes" : attrs,
-    "skills" : skills,
-    "pools" : pools
-  };
+  Map<String, dynamic> toJson() {
+     var attrMap = {};
+     var skillMap = {};
+     var poolMap = {};
+     attrs.forEach((key, value) {
+       attrMap[key] = value.toJson();
+     });
+     skills.forEach((key, value) {
+       skillMap[key] = value.toJson();
+     });
+     pools.forEach((key, value) {
+       poolMap[key] = value.toJson();
+     });
+     return {
+       "name": name,
+       "attributes": attrMap,
+       "skills": skillMap,
+       "pools": poolMap,
+    };
+  }
+}
+
+void main() {
+  Character myChar = new Character("jeff", {
+    "strength": new Attribute("strength", 18, false),
+    "running": new Skill("running", "strength", 2)
+  });
+  var myCharMap = myChar.toJson();
+  var charString = jsonEncode(myCharMap);
+  Character newChar = new Character.fromJson(jsonDecode(charString));
+  print(newChar.name);
 }
