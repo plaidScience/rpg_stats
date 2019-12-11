@@ -166,8 +166,8 @@ class _ViewerState extends State<Viewer>{
                 _dNum = int.parse(value);
               });
             },
-          ), padding: EdgeInsets.all(8.0),),
-          Text("Sides on the Die", style: TextStyle(fontWeight: FontWeight.normal, fontSize: 15))
+          ), padding: EdgeInsets.all(10.0),),
+          Container(child: Text("Sides on the Dice You Roll", style: TextStyle(fontWeight: FontWeight.normal, fontSize: 15)), padding: EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0))
         ],
       ),),
     IconButton(
@@ -179,15 +179,15 @@ class _ViewerState extends State<Viewer>{
       widgetList.add(Row(children: [
         Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
-          child: Text(stat + " -- " + statVal.base.toString() + (statVal.halfRounded?(" (" + statVal.mod.toString() + ")"):""), textAlign: TextAlign.left,
+          child: Text(stat + ": " + statVal.base.toString() + (statVal.halfRounded?(((statVal.mod>0)?" (+":" (") + statVal.mod.toString() + ")"):""), textAlign: TextAlign.left,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         ), Container(
           child: Text(statVal.halfRounded
-              ? "Uses D&D Style Modifier ([n-10]/2)"
+              ? "Uses D&D Style Modifier"
               : "Modifier is Stat Itself", textAlign: TextAlign.left,
             style: TextStyle(fontSize: 18),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         )
         ])),
         IconButton(
@@ -201,13 +201,13 @@ class _ViewerState extends State<Viewer>{
       widgetList.add(Row(children: [
         Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
-          child: Text(stat + statVal.mod.toString(), textAlign: TextAlign.left,
+          child: Text(stat + ((statVal.mod > 0)?": +":": ") + statVal.mod.toString(), textAlign: TextAlign.left,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         ), Container(
           child: Text("Related Attribute: " + statVal.relatedAttribute,
             textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         )
         ])),
         IconButton(
@@ -220,11 +220,11 @@ class _ViewerState extends State<Viewer>{
       widgetList.add(Row(children: [Expanded( child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           child: Text(stat, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         ), Container(
           child: Text(statVal.pointer.toString() + "/" + statVal.max.toString(),
             textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
-          padding: EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(10.0),
         )
       ])),
         GestureDetector(
@@ -675,9 +675,9 @@ class MyScreen<T> extends StatefulWidget{
 class _ScreenState<T> extends State<MyScreen<T>> {
   @override
   void initState() {
-    super.initState();
     _LocalStorage.readChars();
     _LocalStorage.readStats();
+    super.initState();
   }
   Drawer getMyDrawer(BuildContext context) => Drawer(
     child: ListView(
@@ -776,7 +776,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
         if (statVal.length != 0) {
           widgetList.add(Container(
             child: Text(stat, textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
-            padding: EdgeInsets.all(8.0),
+            padding: EdgeInsets.all(10.0),
           ));
           statVal.forEach((key, value){
             widgetList.add(Divider(
@@ -787,10 +787,10 @@ class _ScreenState<T> extends State<MyScreen<T>> {
             if (value is Attribute) {
               widgetList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(10.0),
               ), Container(
-                child: Text(value.halfRounded ? "Uses D&D Style Modifier ([n-10]/2)" : "Modifier is Stat Itself", textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
-                padding: EdgeInsets.all(8.0),
+                child: Text(value.halfRounded ? "Uses D&D Style Modifier" : "Modifier is Stat Itself", textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
+                padding: EdgeInsets.all(10.0),
               )])),
                 IconButton(
                   icon: Icon(Icons.clear),
@@ -805,10 +805,10 @@ class _ScreenState<T> extends State<MyScreen<T>> {
             else if (value is Skill) {
               widgetList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start,  children: [Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(10.0),
               ), Container(
                 child: Text("Related Attribute: " + value.relatedAttribute, textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(10.0),
               )])),
                 IconButton(
                   icon: Icon(Icons.clear),
@@ -823,7 +823,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
             else if (value is Pool){
               widgetList.add(Row(children: [Expanded( child: Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(10.0),
               )),
                 IconButton(
                   icon: Icon(Icons.clear),
@@ -854,7 +854,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
     else{
       widgetList.add(Container(
         child: Text("Characters", textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
-        padding: EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(10.0),
       ));
       _LocalStorage.charMap.forEach((key, value) {
         widgetList.add(Divider(
