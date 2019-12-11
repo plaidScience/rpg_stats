@@ -92,6 +92,9 @@ class Pool extends Stat {
   resetPointer() {
     _pointer = max;
   }
+  zeroPointer() {
+    _pointer = 0;
+  }
   Map<String, dynamic> toJson() => {
     "max" : max,
     "pointer" : pointer
@@ -144,9 +147,9 @@ class Character {
     randoms = new Random(new DateTime.now().millisecondsSinceEpoch);
   }
 
-  int makeSkillRoll(String skillKey, [int dNum]) => skills[skillKey].mod + makeAttrRoll(skills[skillKey].relatedAttribute, dNum ?? 20);
+  int makeSkillRoll(String skillKey, [int dNum]) => (skills[skillKey] != null)?(skills[skillKey].mod + makeAttrRoll(skills[skillKey].relatedAttribute, dNum ?? 20)):(makeRoll(dNum ?? 20));
 
-  int makeAttrRoll(String attrKey, [int dNum]) => attrs[attrKey].mod + makeRoll(dNum ?? 20);
+  int makeAttrRoll(String attrKey, [int dNum]) => (attrs[attrKey] != null)?(attrs[attrKey].mod + makeRoll(dNum ?? 20)):(makeRoll(dNum ?? 20));
 
   int makeRoll([int dNum]) => randoms.nextInt(dNum ?? 20) + 1;
 

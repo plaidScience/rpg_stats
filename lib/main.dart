@@ -112,45 +112,171 @@ class MyApp extends StatelessWidget {
           initialRoute: '/character',
           routes: {
             '/character' : (BuildContext context) => MyScreen<Character>(),
-            //'/character/viewer' : (BuildContext context) => Viewer(),
             '/stat' : (BuildContext context) => MyScreen<Stat>(),
-            //'/stat/viewer' : (BuildContext context) => Viewer(),
           }
       ),
     );
   }
 }
 
-/*class Viewer extends StatelessWidget{
+class Viewer extends StatefulWidget {
   final String title;
-  Viewer({Key key, this.title}) : super(key: key);
+  final Character character;
+  Viewer({Key key, this.title, this.character}) : super(key: key);
+  @override
+  _ViewerState createState() => _ViewerState(character: this.character, title: this.title);
+}
 
-}*/
+class _ViewerState extends State<Viewer>{
+  final String title;
+  final Character character;
+  int _lastRoll;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  int _dNum = 20;
+
+  _ViewerState({this.title, this.character}) : super();
+
+  displayRoll([String key]) {
+    _scaffoldKey.currentState.hideCurrentSnackBar();
+    if (key!=null && character.attrs.containsKey(key)){
+      _lastRoll = character.makeAttrRoll(key, _dNum);
+    }
+    else if (key!=null && character.skills.containsKey(key)) {
+      _lastRoll = character.makeSkillRoll(key, _dNum);
+    }
+    else {
+      _lastRoll = character.makeRoll(_dNum);
+    }
+    _scaffoldKey.currentState.showSnackBar(SnackBar(
+      content: Text("Last "+((key!=null)?(key+ " "):"") + "Roll was: " + _lastRoll.toString() + " on a $_dNum-sided Dice"),
+    ));
+  }
+
+  Widget buildBody() {
+    List<Widget> widgetList = [];
+    widgetList.add(Row(children: [
+      Expanded(child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(child: TextFormField(
+            initialValue: "20",
+            keyboardType: TextInputType.number,
+            onChanged: (value){
+              setState(() {
+                _dNum = int.parse(value);
+              });
+            },
+          ), padding: EdgeInsets.all(8.0),),
+          Text("Sides on the Die", style: TextStyle(fontWeight: FontWeight.normal, fontSize: 15))
+        ],
+      ),),
+    IconButton(
+      icon: Icon(Icons.casino),
+      onPressed: () {displayRoll();},
+    )
+    ],));
+    character.attrs.forEach((stat, statVal) {
+      widgetList.add(Row(children: [
+        Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
+          child: Text(stat + " -- " + statVal.base.toString() + (statVal.halfRounded?(" (" + statVal.mod.toString() + ")"):""), textAlign: TextAlign.left,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+          padding: EdgeInsets.all(8.0),
+        ), Container(
+          child: Text(statVal.halfRounded
+              ? "Uses D&D Style Modifier ([n-10]/2)"
+              : "Modifier is Stat Itself", textAlign: TextAlign.left,
+            style: TextStyle(fontSize: 18),),
+          padding: EdgeInsets.all(8.0),
+        )
+        ])),
+        IconButton(
+          icon: Icon(Icons.casino),
+          onPressed: () {displayRoll(stat);},
+        )
+      ]));
+    });
+    character.skills.forEach((stat, statVal)
+    {
+      widgetList.add(Row(children: [
+        Expanded(child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
+          child: Text(stat + statVal.mod.toString(), textAlign: TextAlign.left,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+          padding: EdgeInsets.all(8.0),
+        ), Container(
+          child: Text("Related Attribute: " + statVal.relatedAttribute,
+            textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
+          padding: EdgeInsets.all(8.0),
+        )
+        ])),
+        IconButton(
+          icon: Icon(Icons.casino),
+          onPressed: () {displayRoll(stat);},
+        )
+      ]));
+    });
+    character.pools.forEach((stat, statVal) {
+      widgetList.add(Row(children: [Expanded( child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          child: Text(stat, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+          padding: EdgeInsets.all(8.0),
+        ), Container(
+          child: Text(statVal.pointer.toString() + "/" + statVal.max.toString(),
+            textAlign: TextAlign.left, style: TextStyle(fontSize: 18),),
+          padding: EdgeInsets.all(8.0),
+        )
+      ])),
+        GestureDetector(
+          child: IconButton(icon: Icon(Icons.add), onPressed: (){
+            setState(() {
+              statVal.increasePointer();
+            });
+            },),
+          onLongPress: (){
+            setState(() {
+              statVal.resetPointer();
+            });
+          },
+        ),
+        GestureDetector(
+          child: IconButton(icon: Icon(Icons.remove), onPressed: (){
+            setState(() {
+              statVal.decreasePointer();
+            });
+            },),
+          onLongPress: (){
+            setState(() {
+              statVal.zeroPointer();
+            });
+          },
+        ),
+      ]));
+    });
+    return ListView(children: widgetList);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      appBar: AppBar(title: Text(title)),
+      body: buildBody()
+    );
+  }
+
+}
 
 class Editor<T> extends StatefulWidget {
-  final T passedInValue;
+  final Character passedInValue;
   Editor({Key key, this.passedInValue}) : super(key: key);
   @override
   _EditorState<T> createState() => _EditorState(passedInValue);
 }
 class _EditorState<T> extends State<Editor<T>> {
-  _EditorState([this.passedInValue]);
+  _EditorState([this.passedInValue]) : super();
   final _formKey = GlobalKey<FormState>();
-  T passedInValue;
-  FocusNode focusNode;
-  @override
-  void initState() {
-    super.initState();
-    focusNode = FocusNode();
-    _halfRounded = true;
-    _LocalStorage.statMap.forEach((stat, statVal){
-      _statList.addAll(statVal);
-    });
-    _statDropDownList = List();
-    _statList.forEach((key, stat){
-      _statDropDownList.add(DropdownMenuItem(value: stat, child: Text(stat.name)));
-    });
-  }
+  Character passedInValue;
   String _dropDownValue;
   String _secondaryDropDownValue;
   Stat _statDropDownValue;
@@ -159,18 +285,59 @@ class _EditorState<T> extends State<Editor<T>> {
   String _name;
   Map<String, Stat> _statList = Map();
   Map<String, Stat> _usedStatList = Map();
+  @override
+  void initState() {
+    super.initState();
+    _halfRounded = true;
+    _LocalStorage.statMap.forEach((stat, statVal){
+      _statList.addAll(statVal);
+    });
+    _statDropDownList = List();
+    _statList.forEach((key, stat){
+      _statDropDownList.add(DropdownMenuItem(value: stat, child: Text(stat.name)));
+    });
+    if (passedInValue != null) {
+      passedInValue.attrs.forEach((key, value) {
+        _usedStatList[key] = value;
+        _statList.remove(key);
+        _statDropDownList = List();
+        _statList.forEach((key, stat) {
+          _statDropDownList.add(
+              DropdownMenuItem(value: stat, child: Text(stat.name)));
+        });
+      });
+      passedInValue.skills.forEach((key, value) {
+        _usedStatList[key] = value;
+        _statList.remove(key);
+        _statDropDownList = List();
+        _statList.forEach((key, stat) {
+          _statDropDownList.add(
+              DropdownMenuItem(value: stat, child: Text(stat.name)));
+        });
+      });
+      passedInValue.pools.forEach((key, value) {
+        _usedStatList[key] = value;
+        _statList.remove(key);
+        _statDropDownList = List();
+        _statList.forEach((key, stat) {
+          _statDropDownList.add(
+              DropdownMenuItem(value: stat, child: Text(stat.name)));
+        });
+      });
+    }
+  }
   List<Widget> getContent() {
     List<Widget> list = new List();
     if (T == Character) {
       list.addAll(getCharContent(passedInValue));
     }
     else if (T == Stat) {
-      list.addAll(getStatContent(passedInValue));
+      list.addAll(getStatContent());
     }
     return list;
   }
 
-  List<Widget> getStatContent(T passedInValue) {
+  List<Widget> getStatContent() {
     List<Widget> list = List();
     list.addAll([
       DropdownButton<String> (
@@ -292,16 +459,17 @@ class _EditorState<T> extends State<Editor<T>> {
     return list;
   }
 
-  List<Widget> getCharContent([T passedInValue]) {
+  List<Widget> getCharContent([Character passedInValue]) {
     List<Widget> list = List();
     list.addAll(<Widget>[
       TextFormField(
         decoration: InputDecoration(labelText: "Character Name", hintText: "Name"),
+        initialValue: passedInValue?.name,
         validator: (value) {
           if(value.isEmpty){
-            return 'Please Enter a Name for the Attribute';
+            return 'Please Enter a Name for the Character';
           }
-          else if (_LocalStorage.charMap.keys.contains(value)) {
+          else if (_LocalStorage.charMap.keys.contains(value) && passedInValue == null) {
             return 'Enter a name you haven\'t used yet';
           }
           else {
@@ -346,7 +514,6 @@ class _EditorState<T> extends State<Editor<T>> {
     ]);
     if (_usedStatList.length > 0){
       _usedStatList.forEach((key, value){
-
         if (value is Attribute) {
           list.add(Row(
             children: <Widget>[
@@ -355,7 +522,8 @@ class _EditorState<T> extends State<Editor<T>> {
                 children: <Widget>[
                   Text(key + " (Attribute)"),
                   TextFormField(
-                    initialValue: value.base.toString(),
+                    initialValue: value.base?.toString(),
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: "Attribute Value", hintText: "Value"),
                     validator: (value2) {
                       if(value2.isEmpty){
@@ -395,7 +563,8 @@ class _EditorState<T> extends State<Editor<T>> {
                 children: <Widget>[
                   Text(key + " (Skill)"),
                   TextFormField(
-                    initialValue: value.mod.toString(),
+                    initialValue: value.mod?.toString(),
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: "Skill Modifier", hintText: "Modifier"),
                     validator: (value2) {
                       if(value2.isEmpty){
@@ -435,7 +604,8 @@ class _EditorState<T> extends State<Editor<T>> {
                 children: <Widget>[
                   Text(key + " (Pool)"),
                   TextFormField(
-                    initialValue: value.max.toString(),
+                    initialValue: value.max?.toString(),
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: "Pool Maximum", hintText: "Maximum"),
                     validator: (value2) {
                       if(value2.isEmpty){
@@ -446,6 +616,7 @@ class _EditorState<T> extends State<Editor<T>> {
                     onSaved: (value2) {
                       setState((){
                         value.max=int.parse(value2);
+                        value.resetPointer();
                       });
                     },
                   )
@@ -468,7 +639,16 @@ class _EditorState<T> extends State<Editor<T>> {
           ));
         }
       });
+
     }
+    list.add(RaisedButton(child: Text("Enter"),
+      onPressed: () {
+        if(_formKey.currentState.validate()){
+          _formKey.currentState.save();
+          Navigator.pop(context, new Character(_name, _usedStatList));
+        }
+      },
+    ));
     return list;
   }
 
@@ -532,6 +712,20 @@ class _ScreenState<T> extends State<MyScreen<T>> {
     ),
   );
 
+  _awaitEditedCharacter(BuildContext context, Character charEdit, String oldKey) async {
+    Character result = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => Editor<Character>(passedInValue: charEdit,))
+    );
+    if (result !=null) {
+      _LocalStorage.charMap.remove(oldKey);
+      _LocalStorage.charMap[result.name] = result;
+      setState(() {
+        _LocalStorage.writeChars();
+      });
+    }
+  }
+
   _awaitValueFromEditor(BuildContext context) async {
     var result = await Navigator.push(
       context,
@@ -573,25 +767,25 @@ class _ScreenState<T> extends State<MyScreen<T>> {
   }
 
   Widget getStatBody() {
-    List<Widget> widgeList = [];
+    List<Widget> widgetList = [];
     if ((_LocalStorage.statMap["Attribute"].length + _LocalStorage.statMap["Skill"].length + _LocalStorage.statMap["Pool"].length) == 0) {
-      widgeList.add(Padding(child: Center( child: Text("Create Stats with the + Below!")), padding: EdgeInsets.all(16.0),));
+      widgetList.add(Padding(child: Center( child: Text("Create Stats with the + Below!")), padding: EdgeInsets.all(16.0),));
     }
     else {
       _LocalStorage.statMap.forEach((stat, statVal) {
         if (statVal.length != 0) {
-          widgeList.add(Container(
+          widgetList.add(Container(
             child: Text(stat, textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
             padding: EdgeInsets.all(8.0),
           ));
           statVal.forEach((key, value){
-            widgeList.add(Divider(
+            widgetList.add(Divider(
                 indent: 5.0,
                 endIndent: 5.0,
                 color: Colors.black26
             ));
             if (value is Attribute) {
-              widgeList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
+              widgetList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start, children: [Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
                 padding: EdgeInsets.all(8.0),
               ), Container(
@@ -609,7 +803,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
               ]));
             }
             else if (value is Skill) {
-              widgeList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start,  children: [Container(
+              widgetList.add(Row(children: [Expanded( child: Column (crossAxisAlignment: CrossAxisAlignment.start,  children: [Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
                 padding: EdgeInsets.all(8.0),
               ), Container(
@@ -627,7 +821,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
               ]));
             }
             else if (value is Pool){
-              widgeList.add(Row(children: [Expanded( child: Container(
+              widgetList.add(Row(children: [Expanded( child: Container(
                 child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
                 padding: EdgeInsets.all(8.0),
               )),
@@ -641,7 +835,7 @@ class _ScreenState<T> extends State<MyScreen<T>> {
               ]));
             }
           });
-          widgeList.add(Divider(
+          widgetList.add(Divider(
               indent: 5.0,
               endIndent: 5.0,
               color: Colors.black54
@@ -649,12 +843,50 @@ class _ScreenState<T> extends State<MyScreen<T>> {
         }
       });
     }
-    return ListView(children: widgeList);
+    return ListView(children: widgetList);
   }
 
   Widget getCharBody() {
-    //TODO: make function
-    return null;
+    List<Widget> widgetList = List();
+    if (_LocalStorage.charMap.length == 0) {
+      widgetList.add(Padding(child: Center( child: Text("Create Characters with the + Below!")), padding: EdgeInsets.all(16.0),));
+    }
+    else{
+      widgetList.add(Container(
+        child: Text("Characters", textAlign: TextAlign.center,style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),),
+        padding: EdgeInsets.all(8.0),
+      ));
+      _LocalStorage.charMap.forEach((key, value) {
+        widgetList.add(Divider(
+            indent: 5.0,
+            endIndent: 5.0,
+            color: Colors.black26
+        ));
+        widgetList.add(
+            Row(
+                children: [
+                  Expanded(child: GestureDetector(
+                    child: Padding(child: Text(key, textAlign: TextAlign.left, style: TextStyle(fontWeight: FontWeight.normal, fontSize: 25),), padding:EdgeInsets.all(16.0)),
+                    onTap: (){
+                      Navigator.push(context,  MaterialPageRoute(builder: (context) => Viewer(title: key, character: value)));
+                      },
+                    onDoubleTap: (){
+                      _awaitEditedCharacter(context, value, key);
+                    },
+                  )),
+                  IconButton(
+                    icon: Icon(Icons.clear),
+                    onPressed: (){
+                      _LocalStorage.charMap.remove(key);
+                      setState(() {_LocalStorage.writeChars();});
+                    },
+                  )
+                ]
+            )
+        );
+      });
+    }
+    return ListView(children: widgetList);
   }
 
   @override
